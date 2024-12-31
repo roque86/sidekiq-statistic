@@ -30,9 +30,11 @@ module Sidekiq
           redis.pipelined do |pipeline|
             pipeline.hincrby(REDIS_HASH, @keys.status, 1)
 
-            pipeline.hmset(REDIS_HASH, @keys.last_job_status, @metric.status,
-                                  @keys.last_time, @metric.finished_at.to_i,
-                                  @keys.queue, @metric.queue)
+            pipeline.hset(REDIS_HASH, {
+              @keys.last_job_status => @metric.status,
+              @keys.last_time => @metric.finished_at.to_i,
+              @keys.queue => @metric.queue
+            })
 
             pipeline.hincrby(@keys.realtime, @keys.class_name, 1)
             pipeline.expire(@keys.realtime, 2)
